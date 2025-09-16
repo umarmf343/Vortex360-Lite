@@ -1,138 +1,139 @@
-### 3) `/wp-content/plugins/vortex360-lite/admin/classes/class-vx-admin-pages.php` — **FULL REPLACEMENT (ready to paste)**
-
-```php
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-class VX_Admin_Pages {
+class VX_Admin_Metabox {
 
     /**
-     * Add Tools submenu under the Vortex Tour CPT.
+     * OPTIONAL: If some environments still call ::register(), this keeps compatibility.
+     * Your orchestrator already adds the main builder metabox directly.
      */
-    public function register_menu() {
-        add_submenu_page(
-            'edit.php?post_type=' . VXLITE_CPT,
-            __( 'Tools (Import/Export)', 'vortex360-lite' ),
-            __( 'Tools', 'vortex360-lite' ),
-            'manage_options',
-            'vxlite-tools',
-            [ $this, 'render_tools' ]
+    public static function register() {
+        add_meta_box(
+            'vxlite_tour_builder',
+            __( 'Vortex360 Tour (Lite)', 'vortex360-lite' ),
+            [ __CLASS__, 'render' ],
+            VXLITE_CPT,
+            'normal',
+            'high'
+        );
+        add_meta_box(
+            'vxlite_tour_help',
+            __( 'Lite Limits & Tips', 'vortex360-lite' ),
+            [ __CLASS__, 'render_help' ],
+            VXLITE_CPT,
+            'side',
+            'default'
         );
     }
 
     /**
-     * Render the Import / Export tools page.
+     * Main builder metabox.
      */
-    public function render_tools() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            return;
+    public static function render( $post ) {
+        wp_nonce_field( 'vxlite_save_tour', 'vxlite_nonce' );
+
+        $data = get_post_meta( $post->ID, VXLITE_META, true );
+        if ( ! is_array( $data ) ) {
+            $data = [ 'scenes' => [] ];
         }
+
+        $exceeded = get_post_meta( $post->ID, '_vxlite_exceeded_single_tour', true );
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e( 'Vortex360 Lite — Tools', 'vortex360-lite' ); ?></h1>
+        <div class="vxlite-metabox">
+            <?php if ( $exceeded ) : ?>
+                <div class="notice notice-warning" style="margin:0 0 10px;">
+                    <p><?php esc_html_e( 'Lite note: You have more than one tour in total. Vortex360 Lite is designed for a single tour.', 'vortex360-lite' ); ?></p>
+                </div>
+            <?php endif; ?>
 
-            <h2><?php esc_html_e( 'Export', 'vortex360-lite' ); ?></h2>
-            <p><?php esc_html_e( 'Export a single tour as JSON.', 'vortex360-lite' ); ?></p>
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-                <?php wp_nonce_field( 'vxlite_export' ); ?>
-                <input type="hidden" name="action" value="vxlite_export" />
-                <label>
-                    <?php esc_html_e( 'Tour ID', 'vortex360-lite' ); ?>:
-                    <input type="number" name="tour_id" min="1" required />
-                </label>
-                <button class="button button-primary" type="submit">
-                    <?php esc_html_e( 'Export JSON', 'vortex360-lite' ); ?>
-                </button>
-            </form>
+            <p class="description">
+                <?php esc_html_e( 'Edit your tour JSON or use the scaffold buttons. Lite allows up to 5 scenes per tour and 5 hotspots per scene (types: text, image, link).', 'vortex360-lite' ); ?>
+            </p>
 
-            <hr/>
+            <div class="vxlite-toolbar">
+                <button type="button" class="button" id="vxlite-add-scene"><?php esc_html_e('Add Scene','vortex360-lite'); ?></button>
+                <button type="button" class="button" id="vxlite-add-hotspot"><?php esc_html_e('Add Hotspot to Last Scene','vortex360-lite'); ?></button>
+                <button type="button" class="button" id="vxlite-pretty"><?php esc_html_e('Prettify JSON','vortex360-lite'); ?></button>
+                <button type="button" class="button button-secondary" id="vxlite-validate"><?php esc_html_e('Validate','vortex360-lite'); ?></button>
+            </div>
 
-            <h2><?php esc_html_e( 'Import', 'vortex360-lite' ); ?></h2>
-            <p><?php esc_html_e( 'Import a tour JSON into a new tour post. Lite allows only 1 tour overall.', 'vortex360-lite' ); ?></p>
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-                <?php wp_nonce_field( 'vxlite_import' ); ?>
-                <input type="hidden" name="action" value="vxlite_import" />
-                <p>
-                    <label>
-                        <?php esc_html_e( 'New Tour Title', 'vortex360-lite' ); ?>:
-                        <input type="text" name="title" required />
-                    </label>
+            <textarea class="vxlite-json" name="vxlite_json" spellcheck="false"><?php
+                echo esc_textarea( wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+            ?></textarea>
+
+            <div class="vxlite-examples">
+                <p class="description" style="margin-top:10px;">
+                    <strong><?php esc_html_e('Scene shape:', 'vortex360-lite'); ?></strong><br/>
+                    <code>{"id":"scene-1","title":"Lobby","panorama":"https://.../pano.jpg","thumb":"https://.../thumb.jpg","hfov":110,"pitch":0,"yaw":0,"hotspots":[ ... ]}</code>
                 </p>
-                <p>
-                    <label><?php esc_html_e( 'Tour JSON', 'vortex360-lite' ); ?>:</label><br/>
-                    <textarea name="json" rows="12" cols="80" style="font-family:monospace" required></textarea>
+                <p class="description">
+                    <strong><?php esc_html_e('Hotspot (text/image/link):', 'vortex360-lite'); ?></strong><br/>
+                    <code>{"type":"text","title":"Info","text":"Welcome!","yaw":0,"pitch":0}</code><br/>
+                    <code>{"type":"image","title":"Poster","image":"https://.../poster.jpg","yaw":15,"pitch":-5}</code><br/>
+                    <code>{"type":"link","title":"Go Lobby","scene":"scene-1","yaw":45,"pitch":-2}</code>
                 </p>
-                <button class="button button-primary" type="submit">
-                    <?php esc_html_e( 'Import JSON', 'vortex360-lite' ); ?>
-                </button>
-            </form>
+            </div>
         </div>
         <?php
     }
 
     /**
-     * Handle export request (download JSON for a given tour).
+     * Side help metabox (shown only if ::register() is used by some setups).
      */
-    public function handle_export() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die();
-        }
-        check_admin_referer( 'vxlite_export' );
-
-        $id = isset( $_POST['tour_id'] ) ? absint( $_POST['tour_id'] ) : 0;
-        if ( ! $id || get_post_type( $id ) !== VXLITE_CPT ) {
-            wp_die( esc_html__( 'Invalid tour ID', 'vortex360-lite' ) );
-        }
-
-        $data = get_post_meta( $id, VXLITE_META, true );
-        if ( ! is_array( $data ) ) {
-            $data = [ 'scenes' => [] ];
-        }
-
-        $post = get_post( $id );
-        $slug = $post ? sanitize_title( $post->post_title ) : 'tour';
-
-        nocache_headers();
-        header( 'Content-Type: application/json; charset=utf-8' );
-        header( 'Content-Disposition: attachment; filename="vortex360-' . $slug . '-' . $id . '.json"' );
-        echo wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-        exit;
+    public static function render_help( $post ) {
+        $count = new WP_Query( [
+            'post_type'      => VXLITE_CPT,
+            'post_status'    => [ 'publish', 'pending', 'draft', 'future', 'private' ],
+            'fields'         => 'ids',
+            'posts_per_page' => -1,
+        ] );
+        $total = (int) $count->found_posts;
+        ?>
+        <ul class="vxlite-help">
+            <li><?php esc_html_e('Lite allows 1 tour in total.', 'vortex360-lite'); ?>
+                <?php printf( esc_html__( 'Current total: %d', 'vortex360-lite' ), $total ); ?>
+            </li>
+            <li><?php esc_html_e('Max 5 scenes per tour; each scene max 5 hotspots.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Use the scene "id" to link between scenes with a link hotspot.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Add "thumb" (URL) per scene for thumbnail navigation row.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Optional: "hfov", "pitch", "yaw" to set initial view.', 'vortex360-lite'); ?></li>
+        </ul>
+        <?php
     }
 
     /**
-     * Handle import request (creates a new Vortex Tour with sanitized JSON).
+     * Save handler for tour JSON.
      */
-    public function handle_import() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die();
+    public static function save( $post_id ) {
+        // Nonce / autosave / caps
+        if ( ! isset( $_POST['vxlite_nonce'] ) || ! wp_verify_nonce( $_POST['vxlite_nonce'], 'vxlite_save_tour' ) ) {
+            return;
         }
-        check_admin_referer( 'vxlite_import' );
-
-        $title = sanitize_text_field( $_POST['title'] ?? '' );
-        $raw   = wp_unslash( $_POST['json'] ?? '' );
-        $arr   = json_decode( $raw, true );
-
-        if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $arr ) ) {
-            wp_die( esc_html__( 'Invalid JSON', 'vortex360-lite' ) );
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return;
+        }
+        if ( ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
         }
 
-        // Sanitize and enforce Lite limits (5 scenes / 5 hotspots per scene).
-        $clean = vxlite_sanitize_tour_array( $arr );
-
-        // Create the new tour post.
-        $post_id = wp_insert_post( [
-            'post_type'   => VXLITE_CPT,
-            'post_title'  => $title ? $title : __( 'Imported Tour', 'vortex360-lite' ),
-            'post_status' => 'publish',
-        ], true );
-
-        if ( is_wp_error( $post_id ) ) {
-            wp_die( esc_html__( 'Failed to create tour', 'vortex360-lite' ) );
+        // Get raw JSON
+        $raw = isset( $_POST['vxlite_json'] ) ? wp_unslash( $_POST['vxlite_json'] ) : '';
+        if ( $raw === '' ) {
+            delete_post_meta( $post_id, VXLITE_META );
+            return;
         }
 
+        $decoded = json_decode( $raw, true );
+        if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $decoded ) ) {
+            // Keep previous valid meta if JSON invalid
+            return;
+        }
+
+        // Sanitize and enforce Lite limits
+        $clean = vxlite_sanitize_tour_array( $decoded );
         update_post_meta( $post_id, VXLITE_META, $clean );
 
-        // Soft-flag if more than 1 tour exists (Lite restriction)
+        // Soft-flag if more than 1 tour exists overall
         $count = new WP_Query( [
             'post_type'      => VXLITE_CPT,
             'post_status'    => [ 'publish', 'pending', 'draft', 'future', 'private' ],
@@ -144,9 +145,5 @@ class VX_Admin_Pages {
         } else {
             delete_post_meta( $post_id, '_vxlite_exceeded_single_tour' );
         }
-
-        wp_safe_redirect( admin_url( 'post.php?post=' . $post_id . '&action=edit' ) );
-        exit;
     }
 }
-```
