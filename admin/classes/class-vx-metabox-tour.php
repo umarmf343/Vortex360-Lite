@@ -12,46 +12,68 @@ class VX_Admin_Metabox {
             'normal',
             'high'
         );
+        add_meta_box(
+            'vxlite_tour_help',
+            __( 'Lite Limits & Tips', 'vortex360-lite' ),
+            [ __CLASS__, 'render_help' ],
+            VXLITE_CPT,
+            'side',
+            'default'
+        );
     }
 
     public static function render( $post ) {
         wp_nonce_field( 'vxlite_save_tour', 'vxlite_nonce' );
         $data = get_post_meta( $post->ID, VXLITE_META, true );
         if ( ! is_array( $data ) ) $data = [ 'scenes' => [] ];
-
-        // Lite limits info
-        echo '<p><strong>'. esc_html__( 'Lite limits:', 'vortex360-lite' ) .'</strong> ';
-        echo esc_html__( '1 tour total, 5 scenes per tour, 5 hotspots per scene (text/image/link).', 'vortex360-lite' ) .'</p>';
-
-        // Simple JSON editor (safe, structured)
-        echo '<p>'. esc_html__( 'Paste/edit your tour JSON. Use the “Add Scene” helper for a scaffold.', 'vortex360-lite' ) .'</p>';
-
-        echo '<textarea style="width:100%;min-height:260px;font-family:monospace" name="vxlite_json">';
-        echo esc_textarea( wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
-        echo '</textarea>';
-
-        // Tiny scaffold helper
         ?>
-        <button type="button" class="button" id="vxlite-add-scene"><?php esc_html_e('Add Scene scaffold','vortex360-lite'); ?></button>
-        <script>
-        (function($){
-            $('#vxlite-add-scene').on('click', function(){
-                try {
-                    const el = $('textarea[name="vxlite_json"]');
-                    const json = el.val().trim() ? JSON.parse(el.val()) : { scenes: [] };
-                    if (!json.scenes) json.scenes = [];
-                    if (json.scenes.length >= 5) { alert('<?php echo esc_js(__('Lite: max 5 scenes', 'vortex360-lite')); ?>'); return; }
-                    json.scenes.push({
-                        id: 'scene-' + (json.scenes.length + 1),
-                        title: 'Scene ' + (json.scenes.length + 1),
-                        panorama: '',
-                        hotspots: []
-                    });
-                    el.val(JSON.stringify(json, null, 2));
-                } catch(e){ alert('Invalid JSON'); }
-            });
-        })(jQuery);
-        </script>
+        <p class="description">
+            <?php esc_html_e( 'Edit your tour JSON or use the scaffold buttons. Lite allows 5 scenes per tour and 5 hotspots per scene (types: text, image, link).', 'vortex360-lite' ); ?>
+        </p>
+
+        <div class="vxlite-toolbar">
+            <button type="button" class="button" id="vxlite-add-scene"><?php esc_html_e('Add Scene','vortex360-lite'); ?></button>
+            <button type="button" class="button" id="vxlite-add-hotspot"><?php esc_html_e('Add Hotspot to Last Scene','vortex360-lite'); ?></button>
+            <button type="button" class="button" id="vxlite-pretty"><?php esc_html_e('Prettify JSON','vortex360-lite'); ?></button>
+            <button type="button" class="button button-secondary" id="vxlite-validate"><?php esc_html_e('Validate','vortex360-lite'); ?></button>
+        </div>
+
+        <textarea class="vxlite-json" name="vxlite_json" spellcheck="false"><?php
+            echo esc_textarea( wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+        ?></textarea>
+
+        <p class="description">
+            <strong><?php esc_html_e('Scene shape:', 'vortex360-lite'); ?></strong>
+            <code>{"id":"scene-1","title":"Lobby","panorama":"https://.../pano.jpg","thumb":"https://.../thumb.jpg","hfov":110,"pitch":0,"yaw":0,"hotspots":[ ... ]}</code>
+        </p>
+        <p class="description">
+            <strong><?php esc_html_e('Hotspot (text/image/link):', 'vortex360-lite'); ?></strong>
+            <code>{"type":"text","title":"Info","text":"Welcome!","yaw":0,"pitch":0}</code>
+            <code>{"type":"image","title":"Poster","image":"https://.../poster.jpg","yaw":15,"pitch":-5}</code>
+            <code>{"type":"link","title":"Go Lobby","scene":"scene-1","yaw":45,"pitch":-2}</code>
+        </p>
+        <?php
+    }
+
+    public static function render_help( $post ) {
+        // Enforce single-tour soft info
+        $count = new WP_Query([
+            'post_type'      => VXLITE_CPT,
+            'post_status'    => [ 'publish', 'pending', 'draft', 'future', 'private' ],
+            'fields'         => 'ids',
+            'posts_per_page' => -1,
+        ]);
+        $total = (int) $count->found_posts;
+        ?>
+        <ul class="vxlite-help">
+            <li><?php esc_html_e('Lite allows 1 tour in total.', 'vortex360-lite'); ?> 
+                <?php printf( esc_html__( 'Current total: %d', 'vortex360-lite' ), $total ); ?>
+            </li>
+            <li><?php esc_html_e('Max 5 scenes per tour; each scene max 5 hotspots.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Use the scene "id" to link between scenes with a link hotspot.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Add "thumb" (URL) per scene for thumbnail navigation row.', 'vortex360-lite'); ?></li>
+            <li><?php esc_html_e('Optional: "hfov", "pitch", "yaw" to set initial view.', 'vortex360-lite'); ?></li>
+        </ul>
         <?php
     }
 
@@ -60,56 +82,28 @@ class VX_Admin_Metabox {
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
         if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-        // Enforce Lite: only allow 1 published tour. Others forced to draft.
+        $raw = isset( $_POST['vxlite_json'] ) ? wp_unslash( $_POST['vxlite_json'] ) : '';
+        if ( $raw === '' ) { delete_post_meta( $post_id, VXLITE_META ); return; }
+
+        $decoded = json_decode( $raw, true );
+        if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $decoded ) ) return;
+
+        // Sanitize and enforce Lite limits
+        $clean = vxlite_sanitize_tour_array( $decoded );
+
+        // Enforce overall "1 tour" soft rule: keep saving but store a flag if exceeded
         $count = new WP_Query([
             'post_type'      => VXLITE_CPT,
-            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'post_status'    => [ 'publish', 'pending', 'draft', 'future', 'private' ],
             'fields'         => 'ids',
             'posts_per_page' => -1,
         ]);
         if ( $count->found_posts > 1 ) {
-            // Soft guard: keep saving but warn via admin_notices in admin.js (simple).
+            update_post_meta( $post_id, '_vxlite_exceeded_single_tour', 1 );
+        } else {
+            delete_post_meta( $post_id, '_vxlite_exceeded_single_tour' );
         }
 
-        $raw = isset( $_POST['vxlite_json'] ) ? wp_unslash( $_POST['vxlite_json'] ) : '';
-        if ( ! $raw ) {
-            delete_post_meta( $post_id, VXLITE_META );
-            return;
-        }
-        $decoded = json_decode( $raw, true );
-        if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $decoded ) ) return;
-
-        // Sanitize + enforce limits
-        $out = [ 'scenes' => [] ];
-        if ( ! empty( $decoded['scenes'] ) && is_array( $decoded['scenes'] ) ) {
-            $scenes = array_slice( $decoded['scenes'], 0, 5 ); // max 5 scenes (Lite)
-            foreach ( $scenes as $scene ) {
-                $s = [
-                    'id'       => sanitize_key( $scene['id'] ?? uniqid('scene-') ),
-                    'title'    => sanitize_text_field( $scene['title'] ?? '' ),
-                    'panorama' => esc_url_raw( $scene['panorama'] ?? '' ),
-                    'hotspots' => [],
-                ];
-                if ( ! empty( $scene['hotspots'] ) && is_array( $scene['hotspots'] ) ) {
-                    $hots = array_slice( $scene['hotspots'], 0, 5 ); // max 5 hotspots per scene
-                    foreach ( $hots as $h ) {
-                        $type = in_array( $h['type'] ?? 'text', [ 'text', 'image', 'link' ], true ) ? $h['type'] : 'text';
-                        $s['hotspots'][] = [
-                            'type'   => $type,
-                            'title'  => sanitize_text_field( $h['title'] ?? '' ),
-                            'text'   => sanitize_textarea_field( $h['text'] ?? '' ),
-                            'image'  => esc_url_raw( $h['image'] ?? '' ),
-                            'url'    => esc_url_raw( $h['url'] ?? '' ),
-                            'yaw'    => floatval( $h['yaw'] ?? 0 ),
-                            'pitch'  => floatval( $h['pitch'] ?? 0 ),
-                            'scene'  => sanitize_key( $h['scene'] ?? '' ), // target scene id for link
-                        ];
-                    }
-                }
-                $out['scenes'][] = $s;
-            }
-        }
-
-        update_post_meta( $post_id, VXLITE_META, $out );
+        update_post_meta( $post_id, VXLITE_META, $clean );
     }
 }
