@@ -1,2 +1,3 @@
-/* Minimal admin styles */
-#vxlite_tour_builder .inside { padding-top: 8px; }
+(function($){
+  // Later: show admin notices if more than 1 tour exists (Lite warning).
+})(jQuery);
