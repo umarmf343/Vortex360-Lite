@@ -24,7 +24,7 @@ define( 'VXLITE_META', '_vxlite_tour_data' ); // JSON blob: scenes + hotspots
 spl_autoload_register( function( $class ) {
     if ( strpos( $class, 'VX_' ) !== 0 ) return;
 
-    $map = [
+   $map = [
     // Core
     'VX_Loader'        => 'includes/class-vx-loader.php',
     'VX'               => 'includes/class-vx.php',
@@ -38,13 +38,20 @@ spl_autoload_register( function( $class ) {
     'VX_Admin'         => 'admin/class-vx-admin.php',
     'VX_Admin_Metabox' => 'admin/classes/class-vx-metabox-tour.php',
 
-    // NEW (Phase 3)
+    // Phase 3
     'VX_REST'          => 'includes/class-vx-rest.php',
     'VX_Admin_Pages'   => 'admin/classes/class-vx-admin-pages.php',
     'VX_Admin_Ajax'    => 'admin/classes/class-vx-ajax.php',
     'VX_Block'         => 'includes/class-vx-block.php',
     'VX_Elementor'     => 'elementor/elementor.php',
+
+    // Phase 4 (NEW)
+    'VX_Capabilities'  => 'includes/class-vx-capabilities.php',
+    'VX_Settings'      => 'admin/classes/class-vx-settings.php',
+    'VX_Analytics'     => 'includes/class-vx-analytics.php',
+    'VX_Upgrade_Notices' => 'upgrade/class-vx-upgrade-notices.php',
 ];
+
 
 
     if ( isset( $map[ $class ] ) && file_exists( VXLITE_DIR . $map[ $class ] ) ) {
