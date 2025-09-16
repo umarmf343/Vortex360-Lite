@@ -1,0 +1,355 @@
+{
+  "tour": {
+    "id": "sample-tour-001",
+    "title": "Virtual Office Tour",
+    "description": "Take a virtual tour of our modern office space and discover our work environment.",
+    "author": "Vortex360 Lite",
+    "version": "1.0.0",
+    "created": "2024-01-15T10:00:00Z",
+    "settings": {
+      "autoRotate": true,
+      "autoRotateSpeed": 2,
+      "showControls": true,
+      "showFullscreen": true,
+      "showInfo": true,
+      "enableKeyboard": true,
+      "enableMouse": true,
+      "enableTouch": true,
+      "initialZoom": 75,
+      "maxZoom": 120,
+      "minZoom": 50,
+      "backgroundColor": "#000000",
+      "loadingText": "Loading virtual tour...",
+      "branding": {
+        "show": true,
+        "text": "Powered by Vortex360 Lite",
+        "link": "https://vortex360.com"
+      }
+    },
+    "scenes": [
+      {
+        "id": "reception",
+        "title": "Reception Area",
+        "description": "Welcome to our modern reception area where visitors are greeted.",
+        "image": "https://via.placeholder.com/2048x1024/4a90e2/ffffff?text=Reception+360°",
+        "thumbnail": "https://via.placeholder.com/300x150/4a90e2/ffffff?text=Reception",
+        "isDefault": true,
+        "settings": {
+          "pitch": 0,
+          "yaw": 0,
+          "fov": 90
+        },
+        "hotspots": [
+          {
+            "id": "info-desk",
+            "type": "info",
+            "title": "Reception Desk",
+            "description": "Our friendly reception staff are here to help you from 9 AM to 6 PM.",
+            "position": {
+              "pitch": -10,
+              "yaw": 45
+            },
+            "style": {
+              "backgroundColor": "#0073aa",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "to-office",
+            "type": "scene",
+            "title": "Go to Office Area",
+            "targetScene": "office",
+            "position": {
+              "pitch": 0,
+              "yaw": 90
+            },
+            "style": {
+              "backgroundColor": "#00a32a",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "company-info",
+            "type": "link",
+            "title": "Learn More About Us",
+            "url": "https://example.com/about",
+            "target": "_blank",
+            "position": {
+              "pitch": 15,
+              "yaw": -30
+            },
+            "style": {
+              "backgroundColor": "#d63638",
+              "textColor": "#ffffff"
+            }
+          }
+        ]
+      },
+      {
+        "id": "office",
+        "title": "Main Office",
+        "description": "Our open-plan office space where the magic happens.",
+        "image": "https://via.placeholder.com/2048x1024/7ed321/ffffff?text=Office+360°",
+        "thumbnail": "https://via.placeholder.com/300x150/7ed321/ffffff?text=Office",
+        "isDefault": false,
+        "settings": {
+          "pitch": -5,
+          "yaw": 180,
+          "fov": 85
+        },
+        "hotspots": [
+          {
+            "id": "workstations",
+            "type": "info",
+            "title": "Workstations",
+            "description": "Modern workstations equipped with the latest technology for maximum productivity.",
+            "position": {
+              "pitch": -15,
+              "yaw": 0
+            },
+            "style": {
+              "backgroundColor": "#0073aa",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "to-meeting",
+            "type": "scene",
+            "title": "Visit Meeting Room",
+            "targetScene": "meeting",
+            "position": {
+              "pitch": 0,
+              "yaw": -90
+            },
+            "style": {
+              "backgroundColor": "#00a32a",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "back-reception",
+            "type": "scene",
+            "title": "Back to Reception",
+            "targetScene": "reception",
+            "position": {
+              "pitch": 0,
+              "yaw": 180
+            },
+            "style": {
+              "backgroundColor": "#666666",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "team-photo",
+            "type": "media",
+            "title": "Meet Our Team",
+            "mediaType": "image",
+            "mediaUrl": "https://via.placeholder.com/800x600/f39c12/ffffff?text=Team+Photo",
+            "position": {
+              "pitch": 10,
+              "yaw": 45
+            },
+            "style": {
+              "backgroundColor": "#f39c12",
+              "textColor": "#ffffff"
+            }
+          }
+        ]
+      },
+      {
+        "id": "meeting",
+        "title": "Meeting Room",
+        "description": "Our state-of-the-art meeting room for important discussions and presentations.",
+        "image": "https://via.placeholder.com/2048x1024/e74c3c/ffffff?text=Meeting+Room+360°",
+        "thumbnail": "https://via.placeholder.com/300x150/e74c3c/ffffff?text=Meeting",
+        "isDefault": false,
+        "settings": {
+          "pitch": 0,
+          "yaw": 270,
+          "fov": 80
+        },
+        "hotspots": [
+          {
+            "id": "conference-table",
+            "type": "info",
+            "title": "Conference Table",
+            "description": "Our 12-person conference table with integrated technology for seamless presentations.",
+            "position": {
+              "pitch": -20,
+              "yaw": 0
+            },
+            "style": {
+              "backgroundColor": "#0073aa",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "presentation-screen",
+            "type": "info",
+            "title": "Presentation Screen",
+            "description": "4K display for crystal-clear presentations and video conferences.",
+            "position": {
+              "pitch": 5,
+              "yaw": 90
+            },
+            "style": {
+              "backgroundColor": "#9b59b6",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "back-office",
+            "type": "scene",
+            "title": "Back to Office",
+            "targetScene": "office",
+            "position": {
+              "pitch": 0,
+              "yaw": 180
+            },
+            "style": {
+              "backgroundColor": "#666666",
+              "textColor": "#ffffff"
+            }
+          },
+          {
+            "id": "book-meeting",
+            "type": "link",
+            "title": "Book This Room",
+            "url": "https://example.com/book-meeting",
+            "target": "_blank",
+            "position": {
+              "pitch": -10,
+              "yaw": -45
+            },
+            "style": {
+              "backgroundColor": "#d63638",
+              "textColor": "#ffffff"
+            }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "totalScenes": 3,
+      "totalHotspots": 11,
+      "estimatedDuration": "5-7 minutes",
+      "difficulty": "Easy",
+      "category": "Office",
+      "tags": ["office", "workspace", "modern", "business", "virtual tour"],
+      "language": "en",
+      "accessibility": {
+        "keyboardNavigation": true,
+        "screenReaderSupport": true,
+        "highContrast": false,
+        "audioDescriptions": false
+      },
+      "seo": {
+        "title": "Virtual Office Tour - Modern Workspace Experience",
+        "description": "Explore our modern office space through this immersive 360° virtual tour. Discover our reception area, open office, and meeting rooms.",
+        "keywords": "virtual tour, office space, 360 degree, workspace, business environment",
+        "ogImage": "https://via.placeholder.com/1200x630/4a90e2/ffffff?text=Virtual+Office+Tour"
+      }
+    },
+    "analytics": {
+      "trackViews": true,
+      "trackHotspotClicks": true,
+      "trackSceneTransitions": true,
+      "trackTimeSpent": true,
+      "customEvents": []
+    },
+    "compatibility": {
+      "minWordPressVersion": "5.0",
+      "maxWordPressVersion": "6.4",
+      "requiredPlugins": [],
+      "supportedBrowsers": [
+        "Chrome 70+",
+        "Firefox 65+",
+        "Safari 12+",
+        "Edge 79+"
+      ],
+      "mobileSupport": true,
+      "tabletSupport": true
+    }
+  },
+  "installation": {
+    "instructions": [
+      "1. Upload this JSON file through the Vortex360 Lite import feature",
+      "2. The sample tour will be created with placeholder images",
+      "3. Replace placeholder images with your own 360° photos",
+      "4. Customize hotspots and settings as needed",
+      "5. Publish the tour using shortcode [vortex360 id='sample-tour-001']"
+    ],
+    "notes": [
+      "This sample uses placeholder images from placeholder.com",
+      "Replace with actual 360° images for production use",
+      "Lite version supports up to 5 scenes and 5 hotspots per scene",
+      "Some features may require Vortex360 Pro"
+    ]
+  },
+  "customization": {
+    "themes": {
+      "default": {
+        "primaryColor": "#0073aa",
+        "secondaryColor": "#00a32a",
+        "backgroundColor": "#000000",
+        "textColor": "#ffffff",
+        "controlsColor": "#ffffff"
+      },
+      "dark": {
+        "primaryColor": "#4a90e2",
+        "secondaryColor": "#7ed321",
+        "backgroundColor": "#1a1a1a",
+        "textColor": "#ffffff",
+        "controlsColor": "#cccccc"
+      },
+      "light": {
+        "primaryColor": "#2c3e50",
+        "secondaryColor": "#27ae60",
+        "backgroundColor": "#ffffff",
+        "textColor": "#333333",
+        "controlsColor": "#666666"
+      }
+    },
+    "layouts": {
+      "fullscreen": {
+        "showTitle": true,
+        "showDescription": true,
+        "showControls": true,
+        "showThumbnails": true
+      },
+      "embedded": {
+        "showTitle": false,
+        "showDescription": false,
+        "showControls": true,
+        "showThumbnails": false
+      },
+      "minimal": {
+        "showTitle": false,
+        "showDescription": false,
+        "showControls": false,
+        "showThumbnails": false
+      }
+    }
+  },
+  "pro_features": {
+    "available_in_pro": [
+      "Unlimited scenes and hotspots",
+      "Custom branding removal",
+      "Advanced analytics",
+      "Audio narration",
+      "Video hotspots",
+      "Custom themes",
+      "White-label solution",
+      "Priority support",
+      "Advanced SEO options",
+      "Multi-language support"
+    ],
+    "upgrade_url": "https://vortex360.com/pro",
+    "pricing": {
+      "monthly": "$29",
+      "yearly": "$299",
+      "lifetime": "$599"
+    }
+  }
+}
