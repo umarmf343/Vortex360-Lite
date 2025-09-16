@@ -1,4 +1,40 @@
+/* Container spacing */
 #vxlite_tour_builder .inside { padding-top: 8px; }
-.vxlite-toolbar { margin-bottom: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
-.vxlite-json { width: 100%; min-height: 360px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 13px; }
-.vxlite-help { margin: 0; padding-left: 18px; list-style: disc; }
+
+/* Toolbar */
+.vxlite-toolbar {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* JSON editor */
+.vxlite-json {
+  width: 100%;
+  min-height: 360px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  tab-size: 2;
+  white-space: pre;
+}
+
+/* Help list */
+.vxlite-help {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+/* Examples block */
+.vxlite-examples code {
+  display: inline-block;
+  margin: 2px 0;
+  padding: 2px 4px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+  font-size: 12px;
+  user-select: all;
+}
