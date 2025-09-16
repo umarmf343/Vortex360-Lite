@@ -86,3 +86,21 @@ add_action( 'plugins_loaded', function(){
     }
     VX::instance()->run();
 });
+function vxlite_activate() {
+    if ( class_exists( 'VX_CPT' ) ) {
+        ( new VX_CPT() )->register_cpt();
+    }
+    if ( class_exists( 'VX_Capabilities' ) ) {
+        VX_Capabilities::install_caps();
+    }
+    flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, 'vxlite_activate' );
+
+function vxlite_deactivate() {
+    if ( class_exists( 'VX_Capabilities' ) ) {
+        VX_Capabilities::remove_caps();
+    }
+    flush_rewrite_rules();
+}
+register_deactivation_hook( __FILE__, 'vxlite_deactivate' );
