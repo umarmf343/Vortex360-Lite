@@ -1,8 +1,6 @@
 (function($){
-  // Build a pannellum scene dictionary and hook simple UI.
   function buildPannellumConfig(containerId, tour, opts){
     var defaultHFOV = 110;
-
     var scenes = {};
     (tour.scenes || []).forEach(function(s, idx){
       var sceneId = s.id || ('scene_' + (idx+1));
@@ -11,21 +9,12 @@
         var yaw = parseFloat(h.yaw || 0);
         var pitch = parseFloat(h.pitch || 0);
         if (h.type === 'link' && h.scene) {
-          hs.push({
-            type: 'scene',
-            text: h.title || '',
-            sceneId: h.scene,
-            yaw: yaw,
-            pitch: pitch
-          });
+          hs.push({ type:'scene', text:(h.title||''), sceneId:h.scene, yaw:yaw, pitch:pitch });
         } else {
-          // Regular info hotspot; we implement a custom tooltip handler
           hs.push({
-            yaw: yaw,
-            pitch: pitch,
-            cssClass: 'vxlite-hotspot',
+            yaw: yaw, pitch: pitch, cssClass: 'vxlite-hs',
             createTooltipFunc: function(hsDiv) {
-              hsDiv.classList.add('vxlite-hs');
+              hsDiv.classList.add('vxlite-hs-dot');
               hsDiv.innerHTML = '<div class="vxlite-dot"></div>';
               hsDiv.addEventListener('mouseenter', function(){
                 var tip = document.createElement('div');
@@ -62,10 +51,7 @@
 
     var firstId = (tour.scenes && tour.scenes[0] && (tour.scenes[0].id || 'scene_1')) || Object.keys(scenes)[0];
 
-    return {
-      default: { firstScene: firstId, autoLoad: !!opts.autorotate, showControls: !!opts.controls },
-      scenes: scenes
-    };
+    return { default: { firstScene: firstId, autoLoad: !!opts.autorotate, showControls: !!opts.controls }, scenes: scenes };
   }
 
   function positionTip(tip, anchor) {
@@ -100,6 +86,19 @@
     });
   }
 
+  function pingAnalytics(postId){
+    if (!postId || !window.vxliteVars || !vxliteVars.ajaxurl) return;
+    // Ping only once per page load per postId
+    var key = '__vxlite_ping_'+postId;
+    if (window[key]) return;
+    window[key] = true;
+    $.post(vxliteVars.ajaxurl, {
+      action: 'vxlite_ping',
+      post_id: postId,
+      _ajax_nonce: vxliteVars.nonce
+    });
+  }
+
   $(function(){
     $('.vxlite-viewer').each(function(){
       var el = this;
@@ -107,23 +106,4 @@
       if (!window[key]) return;
 
       var cfg  = window[key];
-      var tour = cfg.tour || {};
-      var opts = cfg.options || {};
-
-      var pann = buildPannellumConfig(key, tour, opts);
-      var viewer = pannellum.viewer(el, {
-        default: pann.default,
-        scenes: pann.scenes,
-        autoRotate: opts.autorotate ? -2 : 0, // slow rotate
-        showControls: !!opts.controls,
-        compass: !!opts.compass
-      });
-
-      if (opts.fullscreen && el.requestFullscreen) {
-        // Pannellum already adds a fullscreen button; nothing extra required.
-      }
-
-      if (opts.thumbnails) buildThumbs(key, tour, viewer);
-    });
-  });
-})(jQuery);
+      var tour = cfg
