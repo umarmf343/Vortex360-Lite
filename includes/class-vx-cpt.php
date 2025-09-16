@@ -26,6 +26,7 @@ class VX_CPT {
             'supports'           => [ 'title', 'thumbnail' ],
             'capability_type'    => 'post',
             'map_meta_cap'       => true,
+            'show_in_rest'       => false,
         ];
         register_post_type( VXLITE_CPT, $args );
     }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Vortex360 Lite
- * Description: Create simple 360° virtual tours. Lite = 1 tour, 5 scenes/tour, 5 hotspots/scene.
+ * Description: 360° virtual tour builder (Lite): 1 tour, 5 scenes per tour, 5 hotspots per scene, shortcode + block + Elementor (basic).
  * Version: 1.0.0
  * Author: AlFawz Qur’an Institute
  * License: GPLv2 or later
@@ -20,30 +20,38 @@ define( 'VXLITE_SLUG', 'vortex360-lite' );
 define( 'VXLITE_CPT',  'vortex_tour' );
 define( 'VXLITE_META', '_vxlite_tour_data' ); // JSON blob: scenes + hotspots
 
-// PSR-4-ish minimal autoloader for plugin classes.
+// Minimal class autoloader (prefix VX_)
 spl_autoload_register( function( $class ) {
     if ( strpos( $class, 'VX_' ) !== 0 ) return;
+
     $map = [
-        'VX_Loader'          => 'includes/class-vx-loader.php',
-        'VX'                 => 'includes/class-vx.php',
-        'VX_I18n'            => 'includes/class-vx-i18n.php',
-        'VX_CPT'             => 'includes/class-vx-cpt.php',
-        'VX_Shortcode'       => 'includes/class-vx-shortcode.php',
-        'VX_Public'          => 'public/class-vx-public.php',
-        'VX_Render'          => 'public/classes/class-vx-render.php',
-        'VX_Admin'           => 'admin/class-vx-admin.php',
-        'VX_Admin_Metabox'   => 'admin/classes/class-vx-metabox-tour.php',
+        // Core
+        'VX_Loader'        => 'includes/class-vx-loader.php',
+        'VX'               => 'includes/class-vx.php',
+        'VX_I18n'          => 'includes/class-vx-i18n.php',
+        'VX_CPT'           => 'includes/class-vx-cpt.php',
+        'VX_Shortcode'     => 'includes/class-vx-shortcode.php',
+
+        // Admin / Public (hooked later phases)
+        'VX_Admin'         => 'admin/class-vx-admin.php',
+        'VX_Admin_Metabox' => 'admin/classes/class-vx-metabox-tour.php',
+        'VX_Public'        => 'public/class-vx-public.php',
+        'VX_Render'        => 'public/classes/class-vx-render.php',
     ];
-    if ( isset( $map[ $class ] ) ) {
+
+    if ( isset( $map[ $class ] ) && file_exists( VXLITE_DIR . $map[ $class ] ) ) {
         require_once VXLITE_DIR . $map[ $class ];
     }
 });
 
+// Always-available helpers
 require_once VXLITE_DIR . 'includes/helpers/vx-utils.php';
 
 function vxlite_activate() {
-    // Reserve rewrite for CPT.
-    ( new VX_CPT() )->register_cpt();
+    // Ensure CPT is registered before flushing rewrites.
+    if ( class_exists( 'VX_CPT' ) ) {
+        ( new VX_CPT() )->register_cpt();
+    }
     flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'vxlite_activate' );
@@ -53,8 +61,13 @@ function vxlite_deactivate() {
 }
 register_deactivation_hook( __FILE__, 'vxlite_deactivate' );
 
-function vxlite_init() {
-    $vx = VX::instance();
-    $vx->run();
-}
-add_action( 'plugins_loaded', 'vxlite_init' );
+add_action( 'plugins_loaded', function(){
+    if ( ! class_exists( 'VX' ) ) {
+        // Hard fail safe if a file didn’t load.
+        add_action( 'admin_notices', function(){
+            echo '<div class="notice notice-error"><p><strong>Vortex360 Lite:</strong> Core class missing. Please re-upload the plugin.</p></div>';
+        });
+        return;
+    }
+    VX::instance()->run();
+});
