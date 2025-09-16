@@ -11,7 +11,7 @@ class VX_Public {
             VXLITE_VERSION
         );
 
-        // Pannellum (CDN) — stable, widely used
+        // Pannellum (CDN)
         wp_register_style(
             'pannellum-css',
             'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css',
@@ -34,5 +34,11 @@ class VX_Public {
             VXLITE_VERSION,
             true
         );
+
+        // Global AJAX vars for analytics ping
+        wp_localize_script( 'vxlite-viewer', 'vxliteVars', [
+            'ajaxurl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'vxlite_ajax' ),
+        ] );
     }
 }
