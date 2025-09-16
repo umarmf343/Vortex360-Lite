@@ -1,0 +1,23 @@
+{
+  "apiVersion": 2,
+  "name": "vortex360/tour",
+  "title": "Vortex360 Tour",
+  "category": "widgets",
+  "icon": "location",
+  "description": "Embed a Vortex360 tour.",
+  "attributes": {
+    "postId": { "type": "number", "default": 0 },
+    "width": { "type": "string", "default": "100%" },
+    "height": { "type": "string", "default": "520px" },
+    "autorotate": { "type": "boolean", "default": true },
+    "fullscreen": { "type": "boolean", "default": true },
+    "compass": { "type": "boolean", "default": true },
+    "thumbnails": { "type": "boolean", "default": true },
+    "controls": { "type": "boolean", "default": true }
+  },
+  "editorScript": "vxlite-block-editor",
+  "style": "vxlite-block-style",
+  "supports": {
+    "html": false
+  }
+}
