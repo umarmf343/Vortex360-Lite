@@ -1,53 +1,129 @@
 (function($){
-  // Very small placeholder viewer:
-  // Renders first scene's panorama as a background image and shows simple hotspots (absolute % via yaw/pitch ~ crude).
-  // You can later replace this with Pannellum; this keeps the shortcode functional immediately.
+  // Build a pannellum scene dictionary and hook simple UI.
+  function buildPannellumConfig(containerId, tour, opts){
+    var defaultHFOV = 110;
+
+    var scenes = {};
+    (tour.scenes || []).forEach(function(s, idx){
+      var sceneId = s.id || ('scene_' + (idx+1));
+      var hs = [];
+      (s.hotspots || []).forEach(function(h){
+        var yaw = parseFloat(h.yaw || 0);
+        var pitch = parseFloat(h.pitch || 0);
+        if (h.type === 'link' && h.scene) {
+          hs.push({
+            type: 'scene',
+            text: h.title || '',
+            sceneId: h.scene,
+            yaw: yaw,
+            pitch: pitch
+          });
+        } else {
+          // Regular info hotspot; we implement a custom tooltip handler
+          hs.push({
+            yaw: yaw,
+            pitch: pitch,
+            cssClass: 'vxlite-hotspot',
+            createTooltipFunc: function(hsDiv) {
+              hsDiv.classList.add('vxlite-hs');
+              hsDiv.innerHTML = '<div class="vxlite-dot"></div>';
+              hsDiv.addEventListener('mouseenter', function(){
+                var tip = document.createElement('div');
+                tip.className = 'vxlite-tip';
+                var html = '';
+                if (h.title) html += '<strong>'+ escapeHtml(h.title) +'</strong><br>';
+                if (h.type === 'text' && h.text) html += '<span>'+ escapeHtml(h.text) +'</span>';
+                if (h.type === 'image' && h.image) html += '<img src="'+ h.image +'" style="max-width:220px;display:block;margin-top:6px;border-radius:4px">';
+                tip.innerHTML = html || ' ';
+                document.body.appendChild(tip);
+                positionTip(tip, hsDiv);
+                hsDiv._vxliteTip = tip;
+              });
+              hsDiv.addEventListener('mouseleave', function(){
+                if (hsDiv._vxliteTip) { hsDiv._vxliteTip.remove(); hsDiv._vxliteTip = null; }
+              });
+              hsDiv.addEventListener('mousemove', function(){ if (hsDiv._vxliteTip) positionTip(hsDiv._vxliteTip, hsDiv); });
+            }
+          });
+        }
+      });
+
+      scenes[sceneId] = {
+        type: 'equirectangular',
+        panorama: s.panorama || '',
+        hfov: parseFloat(s.hfov || defaultHFOV),
+        pitch: parseFloat(s.pitch || 0),
+        yaw: parseFloat(s.yaw || 0),
+        autoLoad: !!opts.autorotate,
+        hotSpots: hs,
+        compass: !!opts.compass
+      };
+    });
+
+    var firstId = (tour.scenes && tour.scenes[0] && (tour.scenes[0].id || 'scene_1')) || Object.keys(scenes)[0];
+
+    return {
+      default: { firstScene: firstId, autoLoad: !!opts.autorotate, showControls: !!opts.controls },
+      scenes: scenes
+    };
+  }
+
+  function positionTip(tip, anchor) {
+    var r = anchor.getBoundingClientRect();
+    tip.style.left = (r.left + r.width/2) + 'px';
+    tip.style.top  = (r.top - 8) + 'px';
+  }
+
+  function escapeHtml(s){
+    return (''+s)
+      .replaceAll('&','&amp;').replaceAll('<','&lt;')
+      .replaceAll('>','&gt;').replaceAll('"','&quot;')
+      .replaceAll("'",'&#039;');
+  }
+
+  function buildThumbs(containerId, tour, viewer){
+    var $row = $('#'+containerId+'-thumbs');
+    $row.empty();
+    (tour.scenes || []).forEach(function(s, idx){
+      var id = s.id || ('scene_'+(idx+1));
+      var $thumb = $('<div class="vxlite-thumb" data-scene="'+id+'"></div>');
+      var img = s.thumb ? '<img src="'+ s.thumb +'" alt="">' : '';
+      var title = s.title ? '<div class="vxlite-thumb-title">'+ escapeHtml(s.title) +'</div>' : '';
+      $thumb.html(img + title);
+      if (idx === 0) $thumb.addClass('active');
+      $thumb.on('click', function(){
+        $('.vxlite-thumb').removeClass('active');
+        $(this).addClass('active');
+        viewer.loadScene(id, null, 'fade', 1000);
+      });
+      $row.append($thumb);
+    });
+  }
 
   $(function(){
     $('.vxlite-viewer').each(function(){
-      var el = $(this)[0];
-      var key = el.id; // localized object name
+      var el = this;
+      var key = el.id;
       if (!window[key]) return;
 
-      var cfg = window[key];
-      var $wrap = $(el);
+      var cfg  = window[key];
       var tour = cfg.tour || {};
-      var scenes = Array.isArray(tour.scenes) ? tour.scenes : [];
-      if (!scenes.length) return;
+      var opts = cfg.options || {};
 
-      var scene = scenes[0];
-      if (scene.panorama) {
-        $wrap.css({
-          backgroundImage: 'url(' + scene.panorama + ')',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        });
-      }
-
-      // Fake projection: yaw(-180..180), pitch(-90..90) -> percentage box
-      function toXY(yaw, pitch){
-        var x = (yaw + 180) / 360 * 100;
-        var y = (pitch + 90) / 180 * 100;
-        return {x:x, y:y};
-      }
-
-      (scene.hotspots || []).forEach(function(h){
-        var pos = toXY(parseFloat(h.yaw||0), parseFloat(h.pitch||0));
-        var $hs = $('<div class="vxlite-hotspot" />').text(h.title || '•');
-        $hs.css({ left: pos.x+'%', top: pos.y+'%' });
-        $wrap.append($hs);
+      var pann = buildPannellumConfig(key, tour, opts);
+      var viewer = pannellum.viewer(el, {
+        default: pann.default,
+        scenes: pann.scenes,
+        autoRotate: opts.autorotate ? -2 : 0, // slow rotate
+        showControls: !!opts.controls,
+        compass: !!opts.compass
       });
 
-      if (cfg.options && cfg.options.controls) {
-        var $ctrl = $('<div class="vxlite-controls" />');
-        var $fs = $('<button class="vxlite-btn" type="button">⛶</button>');
-        $fs.on('click', function(){
-          if (!$wrap[0].requestFullscreen) return;
-          $wrap[0].requestFullscreen();
-        });
-        $ctrl.append($fs);
-        $wrap.append($ctrl);
+      if (opts.fullscreen && el.requestFullscreen) {
+        // Pannellum already adds a fullscreen button; nothing extra required.
       }
+
+      if (opts.thumbnails) buildThumbs(key, tour, viewer);
     });
   });
 })(jQuery);
