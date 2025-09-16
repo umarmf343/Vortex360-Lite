@@ -2,17 +2,35 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class VX_Public {
-    public function enqueue() {
+    public function register_assets() {
+        // Our UI
         wp_register_style(
             'vxlite-public',
             VXLITE_URL . 'public/css/vortex360.css',
             [],
             VXLITE_VERSION
         );
+
+        // Pannellum (CDN) — stable, widely used
+        wp_register_style(
+            'pannellum-css',
+            'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css',
+            [],
+            '2.5.6'
+        );
+        wp_register_script(
+            'pannellum',
+            'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js',
+            [],
+            '2.5.6',
+            true
+        );
+
+        // Our viewer glue
         wp_register_script(
             'vxlite-viewer',
             VXLITE_URL . 'public/js/viewer.js',
-            [ 'jquery' ],
+            [ 'jquery', 'pannellum' ],
             VXLITE_VERSION,
             true
         );
