@@ -25,19 +25,27 @@ spl_autoload_register( function( $class ) {
     if ( strpos( $class, 'VX_' ) !== 0 ) return;
 
     $map = [
-        // Core
-        'VX_Loader'        => 'includes/class-vx-loader.php',
-        'VX'               => 'includes/class-vx.php',
-        'VX_I18n'          => 'includes/class-vx-i18n.php',
-        'VX_CPT'           => 'includes/class-vx-cpt.php',
-        'VX_Shortcode'     => 'includes/class-vx-shortcode.php',
+    // Core
+    'VX_Loader'        => 'includes/class-vx-loader.php',
+    'VX'               => 'includes/class-vx.php',
+    'VX_I18n'          => 'includes/class-vx-i18n.php',
+    'VX_CPT'           => 'includes/class-vx-cpt.php',
+    'VX_Shortcode'     => 'includes/class-vx-shortcode.php',
 
-        // Admin / Public (hooked later phases)
-        'VX_Admin'         => 'admin/class-vx-admin.php',
-        'VX_Admin_Metabox' => 'admin/classes/class-vx-metabox-tour.php',
-        'VX_Public'        => 'public/class-vx-public.php',
-        'VX_Render'        => 'public/classes/class-vx-render.php',
-    ];
+    // Public/Admin
+    'VX_Public'        => 'public/class-vx-public.php',
+    'VX_Render'        => 'public/classes/class-vx-render.php',
+    'VX_Admin'         => 'admin/class-vx-admin.php',
+    'VX_Admin_Metabox' => 'admin/classes/class-vx-metabox-tour.php',
+
+    // NEW (Phase 3)
+    'VX_REST'          => 'includes/class-vx-rest.php',
+    'VX_Admin_Pages'   => 'admin/classes/class-vx-admin-pages.php',
+    'VX_Admin_Ajax'    => 'admin/classes/class-vx-ajax.php',
+    'VX_Block'         => 'includes/class-vx-block.php',
+    'VX_Elementor'     => 'elementor/elementor.php',
+];
+
 
     if ( isset( $map[ $class ] ) && file_exists( VXLITE_DIR . $map[ $class ] ) ) {
         require_once VXLITE_DIR . $map[ $class ];
